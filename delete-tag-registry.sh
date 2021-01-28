@@ -32,12 +32,12 @@ echo " "
 # check if docker container exist
 if [ -z $(docker ps -a | grep ${registry_name}) ]
   then
-    echo "[ERROR] Container doesn't exist"
+    echo -e "\n[ERROR] Container doesn't exist"
     exit 1
 fi
 
 # proceed to delete image from registry using api
-echo "[INFO] Deleting from registry"
+echo -e "\n[INFO] Deleting from registry"
 curl -v -sSL -X DELETE "http://${registry}/v2/${name}/manifests/$(curl -sSL -I \
   -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
     "http://${registry}/v2/${name}/manifests/${tag}" \
@@ -46,6 +46,6 @@ curl -v -sSL -X DELETE "http://${registry}/v2/${name}/manifests/$(curl -sSL -I \
 )"
 
 # run garbage collector
-echo "[INFO] Running garbage collector"
+echo -e "\n[INFO] Running garbage collector"
 docker exec -it ${registry_name} \
   bin/registry garbage-collect /etc/docker/registry/config.yml
