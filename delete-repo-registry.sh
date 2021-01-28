@@ -6,6 +6,7 @@
 #  registry: registry ip anmd port
 #  name: image name
 
+# receive arguments
 registry_name=$1
 registry=$(echo $2 | egrep -o "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\:[0-9]{1,4}$")
 name=$3
@@ -13,7 +14,7 @@ name=$3
 # show usage
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]
   then
-    echo "Usage: delete-image-registry.sh <registry-name> <ip:port> <image-name>"
+    echo "Usage: delete-repo-registry.sh <registry-name> <ip:port> <image-name>"
     exit 1
 fi
 
@@ -21,7 +22,9 @@ fi
 echo "[INFO] Registry name = ${registry_name}"
 echo "[INFO] IP:PORT = ${registry}"
 echo "[INFO] Image name = ${name}"
+echo " "
 echo "[WARN] ALWAYS MAKE SURE TO RUN ON HOST"
+echo " "
 
 # check if docker container exist
 if [ -z $(docker ps -a | grep ${registry_name}) ]
@@ -31,6 +34,7 @@ if [ -z $(docker ps -a | grep ${registry_name}) ]
 fi
 
 # proceed to delete image from registry using api
+echo "[INFO] Deleting from registry"
 curl -v -sSL -X DELETE "http://${registry}/v2/${name}/manifests/$(curl -sSL -I \
   -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
     "http://${registry}/v2/${name}/manifests/$( \
@@ -39,10 +43,12 @@ curl -v -sSL -X DELETE "http://${registry}/v2/${name}/manifests/$(curl -sSL -I \
   | tr -d $'\r' \
 )"
 
-# ensure image is removed from catalog
+# ensure image is removed from catalogi
+echo "[INFO] Ensuring deletion"
 docker exec -it ${registry_name} sh -c \
   "rm -r /var/lib/registry/docker/registry/v2/repositories/${name}/"
 
 # run garbage collector
+echo "[INFO] Running garbage collector"
 docker exec -it ${registry_name} \
   bin/registry garbage-collect /etc/docker/registry/config.yml
